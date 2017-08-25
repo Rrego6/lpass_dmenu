@@ -1,0 +1,15 @@
+#!/bin/bash
+lpass_text=`lpass ls --long`
+selection=`awk -F '[/[]' '{a=$(4); gsub(/username: /, "", a); print $(2)"/"a}' <<< $lpass_text | sed 's/]//' | sed 's/ //' | dmenu`
+
+if [[ -z $selection ]]; then
+	exit 0
+fi
+username=`grep -oE "[^/]+$" <<< "$selection"`
+website=`grep -oE "^.+/" <<< "$selection"`
+website=${website::-1}
+
+id=`grep  $website <<<$lpass_text | grep $username | grep -oP "(?<=\[id: )[^[]*(?=\])"`
+if [[ -n $id ]]; then
+	lpass show -c --password $id &
+fi
