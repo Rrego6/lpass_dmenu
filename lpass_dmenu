@@ -1,14 +1,34 @@
-#!/bin/bash
-lpass_text=`lpass ls --long`
+#!/usr/bin/env bash
+export username=$lpass_username
+if [[ -z $username ]]; then
+	>&2 echo 'lpass_username variable not set'
+	exit 1
+fi
+
+#attempt login
+is_logged=$(lpass status)
+if [[ $is_logged == N* ]]; then
+	result=$(lpass login --trust $username)
+	if [[ $result == F* ]]; then
+		exit 0
+	fi
+fi
+
+
+lpass_text=$(lpass ls --long)
+
+#TODO: find more efficient way to parse output
 selection=`awk -F '[/[]' '{a=$(4); gsub(/username: /, "", a); print $(2)"/"a}' <<< $lpass_text | sed 's/]//' | sed 's/ //' | dmenu`
 
 if [[ -z $selection ]]; then
 	exit 0
 fi
+
 username=`grep -oE "[^/]+$" <<< "$selection"`
 website=`grep -oE "^.+/" <<< "$selection"`
 website=${website::-1}
 
+#get id of username/password combo
 id=`grep  $website <<<$lpass_text | grep $username | grep -oP "(?<=\[id: )[^[]*(?=\])"`
 if [[ -n $id ]]; then
 	lpass show -c --password $id &
