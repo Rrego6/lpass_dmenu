@@ -17,8 +17,7 @@ fi
 
 lpass_text=$(lpass ls --long)
 
-#TODO: find more efficient way to parse output
-selection=`awk -F '[/[]' '{a=$(4); gsub(/username: /, "", a); print $(2)"/"a}' <<< $lpass_text | sed 's/]//' | sed 's/ //' | dmenu`
+selection=`rofi -show -dmenu <<< $(lpass ls --format="%an/%au")`
 
 if [[ -z $selection ]]; then
 	exit 0
@@ -29,7 +28,7 @@ website=`grep -oE "^.+/" <<< "$selection"`
 website=${website::-1}
 
 #get id of username/password combo
-id=`grep  $website <<<$lpass_text | grep $username | grep -oP "(?<=\[id: )[^[]*(?=\])"`
+id=`grep  $website <<<$lpass_text | grep $username | grep -oE "[^/]+$"`
 if [[ -n $id ]]; then
 	lpass show -c --password $id &
 fi
