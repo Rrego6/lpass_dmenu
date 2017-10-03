@@ -15,10 +15,7 @@ if [[ $is_logged == N* ]]; then
 fi
 
 
-lpass_text=$(lpass ls --long)
-
-selection=`rofi -show -dmenu <<< $(lpass ls --format="%an/%au")`
-
+selection=`lpass ls --format="%an/%au" | rofi -show -dmenu` 
 if [[ -z $selection ]]; then
 	exit 0
 fi
@@ -28,7 +25,7 @@ website=`grep -oE "^.+/" <<< "$selection"`
 website=${website::-1}
 
 #get id of username/password combo
-id=`grep  $website <<<$lpass_text | grep $username | grep -oE "[^/]+$"`
+id=`lpass ls --format="%an/%au/%ai" | grep  $website | grep $username | grep -oE "[^/]+$"`
 if [[ -n $id ]]; then
 	lpass show -c --password $id &
 fi
